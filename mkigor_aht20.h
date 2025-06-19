@@ -26,7 +26,7 @@ public:
     void start_meas();
     bool busy_meas();
     bool is_calibr();
-    struct_aht get_data();
+    struct_aht read_data();
 };
 
 #endif

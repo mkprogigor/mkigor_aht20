@@ -1,4 +1,4 @@
-# AHT20 
+# mkigor_AHT20 
 Short library for ASAIR AHT20 i2c sensor temperature & humidity.
 
 I used oficial Asair datasheet and examples for making this lib:<BR>
