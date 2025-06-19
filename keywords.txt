@@ -10,7 +10,7 @@ begin           KEYWORD2
 start_meas      KEYWORD2
 busy_meas       KEYWORD2
 is_calibr       KEYWORD2
-get_data        KEYWORD2
+read_data       KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
