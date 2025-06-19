@@ -1,5 +1,5 @@
 /************************************************************************************
-Library for test and use ASAIR ANT20 i2c sensor temperature & humidity
+Library for test and use ASAIR AHT20 i2c sensor temperature & humidity
 by Igor Mkprog, mkprogigor@gmail.com
 
 use examples:
@@ -7,11 +7,9 @@ https://github.com/peff74/ESP_AHT20_BMP280
 
 V1.0 from 18.06.2025
 ************************************************************************************/
+#include <mkigor_aht20.h>
 
-#include "mkigor_ant20.h"
-float ant20_humi, ant20_temp;
-
-bool begin() {
+bool aht20::begin() {
     Wire.beginTransmission(0x38);
     Wire.write(0xBE);  // 0xBE --> init register for AHT2x
     if (Wire.endTransmission() == 0) {
@@ -22,7 +20,7 @@ bool begin() {
     }
 }
 
-void start_meas() {
+void aht20::start_meas() {
     Wire.beginTransmission(0x38);
     Wire.write(0xAC);  // 0xAC --> start measurement
     Wire.write(0x33);  // 0x33 --> not really documented what it does, but it's called MEASUREMENT_CTRL
@@ -30,7 +28,7 @@ void start_meas() {
     Wire.endTransmission();
 }
 
-bool busy_meas() {
+bool aht20::busy_meas() {
     Wire.requestFrom(0x38, 1);
     if (Wire.available()) {
         uint8_t _status = Wire.read();
@@ -40,11 +38,20 @@ bool busy_meas() {
     else return false;
 }
 
-void get_data() {
-    uint8_t __str[7];
-    if (Wire.requestFrom(0x38, 7) == 7) {   // Request 7 bytes of data
-        for (uint8_t i = 0; i < 7; i++)   __str[i] = Wire.read();
+bool aht20::is_calibr() {
+    Wire.requestFrom(0x38, 1);
+    if (Wire.available()) {
+        uint8_t _status = Wire.read();
+        if (_status & 0x40) return true;
+        return false;
     }
+    else return false;
+}
+
+struct_aht aht20::get_data() {
+    struct_aht _aht1;
+    uint8_t __str[7];       // Request 7 bytes of data
+    if (Wire.requestFrom(0x38, 7) == 7)  for (uint8_t i = 0; i < 7; i++) __str[i] = Wire.read();
 
     uint8_t crc = 0xFF;   // Check CRC
     for (uint8_t byteIndex = 0; byteIndex < 6; byteIndex++) {
@@ -55,7 +62,8 @@ void get_data() {
         }
     }
     if (crc != __str[6]) {
-        Serial.println("CRC check failed");   return;
+        Serial.println("CRC check failed");
+        return _aht1;
     }
     else Serial.println("CRC Ok");
 
@@ -63,11 +71,12 @@ void get_data() {
     // Byte 1: is 11-12 bits, Byte 2: is 11-4 bits, Byte 3 MSB 4 bits is 3-0 bits of raw data for humidity
     uint32_t __humi = (__str[1] << 12) | (__str[2] << 4) | (__str[3] >> 4);
     // Serial.print("Humidity (raw): ");  Serial.println(__humi);
-    ant20_humi = (float)__humi / 1048576.0 * 100;
+    _aht1.humi1 = (float)__humi / 1048576.0 * 100;
 
     // Extract the raw data temperature from the bytes 3,4,5
     // Byte 3 LSB 4 bits is 19-16 bits, Byte 4 is 15-8 bits, Byte 5 is 7-0 bits of the raw data temperature
     uint32_t __temp = ((__str[3] & 0x0f) << 16) | (__str[4] << 8) | (__str[5]);
     // Serial.print("Temperature (raw): ");   Serial.println(__temp);
-    ant20_temp = (float)__temp / 1048576.0 * 200.0 - 50.0;
+    _aht1.temp1 = (float)__temp / 1048576.0 * 200.0 - 50.0;
+    return _aht1;
 }
