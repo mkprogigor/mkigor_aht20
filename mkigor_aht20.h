@@ -33,7 +33,9 @@ struct aht_stru {
 
 class cl_AHT20 {
 public:
-    cl_AHT20();     // default constructor
+    cl_AHT20(){
+        // default constructor
+    }
     bool begin();
     void do1Meas();
     bool isMeas();
