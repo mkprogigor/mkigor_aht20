@@ -5,7 +5,7 @@ by Igor Mkprog, mkprogigor@gmail.com
 use examples:
 https://github.com/peff74/ESP_AHT20_BMP280
 
-V1.1 from 30.08.2025
+V1.0 from 30.08.2025
 
 Glossary, abbreviations used in the module, prefix and suffix:
 gv_*    -   Global Variable;
@@ -18,6 +18,8 @@ cgf_*   -   Class public (Global) metod (Function), not need, no usefull, becous
 clf_*   -   Class private (Local) metod (Function);
 
 *_stru  -   [or *_stru_t] suffix, as usual, point the type.
+
+Metods (functions) dont use symbol '_', only small or capital letters (ex.: onlySmallOrCapitalLetters)
 ************************************************************************************/
 
 #ifndef mkigor_aht20_h
@@ -40,7 +42,7 @@ public:
     void do1Meas();
     bool isMeas();
     bool isCalibr();
-    aht_stru read_data();
+    aht_stru readTH();
 };
 
 #endif
