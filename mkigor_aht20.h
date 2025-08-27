@@ -14,19 +14,19 @@ V1.0 from 18.06.2025
 #include <Arduino.h>
 #include <Wire.h>
 
-struct struct_aht {
+struct aht_stru {
     float temp1;
     float humi1;
 };
 
-class aht20 {
+class cl_AHT20 {
 public:
-    aht20();
+    cl_AHT20();     // default constructor
     bool begin();
-    void start_meas();
-    bool busy_meas();
-    bool is_calibr();
-    struct_aht read_data();
+    void do1Meas();
+    bool isMeas();
+    bool isCalibr();
+    aht_stru read_data();
 };
 
 #endif

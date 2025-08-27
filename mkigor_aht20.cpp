@@ -9,7 +9,7 @@ V1.0 from 18.06.2025
 ************************************************************************************/
 #include <mkigor_aht20.h>
 
-bool aht20::begin() {
+bool cl_AHT20::begin() {
     Wire.beginTransmission(0x38);
     Wire.write(0xBE);  // 0xBE --> init register for AHT2x
     if (Wire.endTransmission() == 0) {
@@ -20,7 +20,7 @@ bool aht20::begin() {
     }
 }
 
-void aht20::start_meas() {
+void cl_AHT20::do1Meas() {
     Wire.beginTransmission(0x38);
     Wire.write(0xAC);  // 0xAC --> start measurement
     Wire.write(0x33);  // 0x33 --> not really documented what it does, but it's called MEASUREMENT_CTRL
@@ -28,7 +28,7 @@ void aht20::start_meas() {
     Wire.endTransmission();
 }
 
-bool aht20::busy_meas() {
+bool cl_AHT20::isMeas() {
     Wire.requestFrom(0x38, 1);
     if (Wire.available()) {
         uint8_t _status = Wire.read();
@@ -38,7 +38,7 @@ bool aht20::busy_meas() {
     else return false;
 }
 
-bool aht20::is_calibr() {
+bool cl_AHT20::isCalibr() {
     Wire.requestFrom(0x38, 1);
     if (Wire.available()) {
         uint8_t _status = Wire.read();
@@ -49,38 +49,37 @@ bool aht20::is_calibr() {
     else return false;
 }
 
-struct_aht aht20::read_data() {
-    struct_aht _aht1;
-    uint8_t __str[7];       // Request 7 bytes of data
-    if (Wire.requestFrom(0x38, 7) == 7)  for (uint8_t i = 0; i < 7; i++) __str[i] = Wire.read();
+aht_stru cl_AHT20::read_data() {
+    aht_stru lv_aht1 = {0, 0};
+    uint8_t lv_regs[7];       // Request 7 bytes of data
+    if (Wire.requestFrom(0x38, 7) == 7)  for (uint8_t i = 0; i < 7; i++) lv_regs[i] = Wire.read();
 
-    // Serial.print("Status = ");   Serial.println(__str[0], HEX);
+    // Serial.print("Status = ");   Serial.println(lv_regs[0], HEX);
     uint8_t crc = 0xFF;   // Check CRC
     for (uint8_t byteIndex = 0; byteIndex < 6; byteIndex++) {
-        crc ^= __str[byteIndex];
+        crc ^= lv_regs[byteIndex];
         for (uint8_t bitIndex = 8; bitIndex > 0; --bitIndex) {
             if (crc & 0x80) crc = (crc << 1) ^ 0x31;
             else            crc = (crc << 1);
         }
     }
-    if (crc != __str[6]) {
+    if (crc != lv_regs[6]) {
         Serial.println("CRC check failed");
-        return _aht1;
+        return lv_aht1;
     }
     // else Serial.println("CRC Ok");
 
     // Extract the raw data humidity from the bytes 1,2,3
     // Byte 1: is 11-12 bits, Byte 2: is 11-4 bits, Byte 3 MSB 4 bits is 3-0 bits of raw data for humidity
-    uint32_t __humi = (__str[1] << 12) | (__str[2] << 4) | (__str[3] >> 4);
+    uint32_t lv_humi = (lv_regs[1] << 12) | (lv_regs[2] << 4) | (lv_regs[3] >> 4);
     // Serial.print("Humidity (raw): ");  Serial.println(__humi);
-    _aht1.humi1 = ((float)__humi) / 1048576.0 * 100;
+    lv_aht1.humi1 = ((float)lv_humi) / 1048576.0 * 100;
 
     // Extract the raw data temperature from the bytes 3,4,5
     // Byte 3 LSB 4 bits is 19-16 bits, Byte 4 is 15-8 bits, Byte 5 is 7-0 bits of the raw data temperature
-    uint32_t __temp = ((__str[3] & 0x0f) << 16) | (__str[4] << 8) | (__str[5]);
+    uint32_t lv_temp = ((lv_regs[3] & 0x0f) << 16) | (lv_regs[4] << 8) | (lv_regs[5]);
     // Serial.print("Temperature (raw): ");   Serial.println(__temp);
-    _aht1.temp1 = ((float)__temp) / 1048576.0 * 200.0 - 50.0;
-    return _aht1;
+    lv_aht1.temp1 = ((float)lv_temp) / 1048576.0 * 200.0 - 50.0;
+    return lv_aht1;
 }
 
-aht20::aht20() {};
